@@ -1,0 +1,3 @@
+yrc1000_controller:
+  ros__parameters:
+    job_name: "PALLETIZE_DEMO"

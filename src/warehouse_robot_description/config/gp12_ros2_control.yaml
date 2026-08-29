@@ -1,0 +1,59 @@
+# gp12_ros2_control.yaml — FIXED VERSION (real robot)
+# ─────────────────────────────────────────────────────────────────────────────
+# Real-robot controller config — used when connecting to the YRC1000 via MotoROS2.
+# In simulation, arm_controllers.yaml is used instead (loaded by the Gazebo plugin).
+#
+# FIXES:
+#   1. Removed gripper_controller — vacuum gripper has NO movable joints.
+#      Vacuum suction is controlled via /vacuum_gripper/on and /vacuum_gripper/off services.
+#   2. Joint names verified to match URDF: joint_1_s..joint_6_t
+#
+# PREREQUISITES (real robot)
+# ───────────────────────────
+#   1. Flash MotoROS2 binary to the YRC1000 (see Yaskawa-Global/motoros2).
+#   2. Set ROS_DOMAIN_ID to match on both your PC and the controller.
+#   3. Start the micro-ROS Agent on your PC:
+#        docker run -it --rm --net=host microros/micro-ros-agent:humble \
+#          udp4 --port 8888
+#   4. In motoros2_config.yaml on the YRC1000 set:
+#        joint_names:
+#          - [joint_1_s, joint_2_l, joint_3_u, joint_4_r, joint_5_b, joint_6_t]
+#   5. Launch with: ros2 launch warehouse_robot_description display.launch.py
+# ─────────────────────────────────────────────────────────────────────────────
+
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    use_sim_time: false
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+
+arm_controller:
+  ros__parameters:
+    # Must match joint names broadcast by MotoROS2 (/joint_states topic).
+    # Verify with: ros2 topic echo /joint_states
+    joints:
+      - joint_1_s    # S-axis (waist yaw,    ±170°)
+      - joint_2_l    # L-axis (shoulder,     -90°/+155°)
+      - joint_3_u    # U-axis (elbow,        -85°/+150°)
+      - joint_4_r    # R-axis (forearm roll,  ±200°)
+      - joint_5_b    # B-axis (wrist pitch,  -150°/+150°)
+      - joint_6_t    # T-axis (wrist roll,    ±455°)
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    allow_partial_joints_goal: false
+    open_loop_control: false   # use feedback on real hardware
+    constraints:
+      goal_time: 15.0
+      stopped_velocity_tolerance: 0.02

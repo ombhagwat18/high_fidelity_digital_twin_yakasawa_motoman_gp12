@@ -1,0 +1,5 @@
+parcel_perception:
+  ros__parameters:
+    marker_size_m: 0.06
+    aruco_dict: "DICT_4X4_50"
+    show_window: false

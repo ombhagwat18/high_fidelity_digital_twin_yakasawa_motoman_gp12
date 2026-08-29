@@ -1,0 +1,18 @@
+# Both pick_place_logic.py and pick_place.py's PickPlaceExecutor share the
+# SAME rclpy Node instance (PickPlaceExecutor is a plain class constructed
+# with the pick_place_logic node, not a node of its own) — so every
+# parameter below is declared on, and loaded under, the single
+# `pick_place_logic` node name.
+pick_place_logic:
+  ros__parameters:
+    reach_x_min: 0.50
+    reach_x_max: 1.10
+    reach_y_min: -0.50
+    reach_y_max: 0.50
+    debounce_s: 0.5
+    min_confidence: 0.4
+    protective_stop_threshold: 3   # consecutive failures before auto E-stop
+    approach_depth_m: 0.08
+    pre_approach_m: 0.10
+    pre_lift_m: 0.08
+    vacuum_confirm_timeout_s: 2.0

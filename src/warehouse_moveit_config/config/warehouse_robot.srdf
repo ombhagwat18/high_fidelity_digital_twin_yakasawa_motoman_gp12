@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="warehouse_robot">
+
+  <!-- 6-DOF arm chain -->
+  <group name="arm">
+    <chain base_link="base_link" tip_link="tool0"/>
+  </group>
+
+  <!-- Fix robot to world -->
+  <virtual_joint name="world_joint" type="fixed"
+                 parent_frame="world" child_link="base_link"/>
+
+  <!-- Named poses — joint names match gp12_macro.xacro exactly -->
+  <group_state name="home" group="arm">
+    <joint name="joint_1_s" value="0.0"/>
+    <joint name="joint_2_l" value="0.0"/>
+    <joint name="joint_3_u" value="0.0"/>
+    <joint name="joint_4_r" value="0.0"/>
+    <joint name="joint_5_b" value="0.0"/>
+    <joint name="joint_6_t" value="0.0"/>
+  </group_state>
+
+  <group_state name="ready" group="arm">
+    <joint name="joint_1_s" value="0.0"/>
+    <joint name="joint_2_l" value="-0.5236"/>
+    <joint name="joint_3_u" value="1.0472"/>
+    <joint name="joint_4_r" value="0.0"/>
+    <joint name="joint_5_b" value="0.5236"/>
+    <joint name="joint_6_t" value="0.0"/>
+  </group_state>
+
+  <group_state name="pre_pick" group="arm">
+    <joint name="joint_1_s" value="0.0"/>
+    <joint name="joint_2_l" value="0.3491"/>
+    <joint name="joint_3_u" value="0.6981"/>
+    <joint name="joint_4_r" value="0.0"/>
+    <joint name="joint_5_b" value="1.3963"/>
+    <joint name="joint_6_t" value="0.0"/>
+  </group_state>
+
+  <!-- Collision exclusions using REAL link names from gp12_macro.xacro -->
+  <disable_collisions link1="base_link"           link2="link_1_s"            reason="Adjacent"/>
+  <disable_collisions link1="link_1_s"            link2="link_2_l"            reason="Adjacent"/>
+  <disable_collisions link1="link_2_l"            link2="link_3_u"            reason="Adjacent"/>
+  <disable_collisions link1="link_3_u"            link2="link_4_r"            reason="Adjacent"/>
+  <disable_collisions link1="link_4_r"            link2="link_5_b"            reason="Adjacent"/>
+  <disable_collisions link1="link_5_b"            link2="link_6_t"            reason="Adjacent"/>
+  <disable_collisions link1="link_6_t"            link2="vacuum_gripper_base" reason="Adjacent"/>
+  <disable_collisions link1="vacuum_gripper_base" link2="suction_cup_link"     reason="Adjacent"/>
+
+  <disable_collisions link1="base_link"  link2="link_2_l"  reason="Never"/>
+  <disable_collisions link1="base_link"  link2="link_3_u"  reason="Never"/>
+  <disable_collisions link1="link_1_s"   link2="link_3_u"  reason="Never"/>
+  <disable_collisions link1="link_1_s"   link2="link_4_r"  reason="Never"/>
+  <disable_collisions link1="link_2_l"   link2="link_4_r"  reason="Never"/>
+  <disable_collisions link1="link_5_b"   link2="vacuum_gripper_base" reason="Never"/>
+  <disable_collisions link1="link_6_t"   link2="vacuum_gripper_base" reason="Never"/>
+
+  <!-- Ignore RViz-only camera body collisions to avoid false self-collision stops -->
+  <disable_collisions link1="top_camera_viz_link"   link2="link_1_s"            reason="Never"/>
+  <disable_collisions link1="top_camera_viz_link"   link2="link_2_l"            reason="Never"/>
+  <disable_collisions link1="top_camera_viz_link"   link2="link_3_u"            reason="Never"/>
+  <disable_collisions link1="top_camera_viz_link"   link2="link_4_r"            reason="Never"/>
+  <disable_collisions link1="top_camera_viz_link"   link2="link_5_b"            reason="Never"/>
+  <disable_collisions link1="top_camera_viz_link"   link2="link_6_t"            reason="Never"/>
+  <disable_collisions link1="top_camera_viz_link"   link2="vacuum_gripper_base" reason="Never"/>
+  <disable_collisions link1="top_camera_viz_link"   link2="suction_cup_link"    reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="link_1_s"            reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="link_2_l"            reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="link_3_u"            reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="link_4_r"            reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="link_5_b"            reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="link_6_t"            reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="vacuum_gripper_base" reason="Never"/>
+  <disable_collisions link1="front_camera_viz_link" link2="suction_cup_link"    reason="Never"/>
+
+</robot>

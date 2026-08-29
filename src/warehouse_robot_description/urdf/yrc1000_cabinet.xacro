@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<!--
+  yrc1000_cabinet.xacro — visual-only YRC1000 controller cabinet + cabling.
+
+  Purely cosmetic digital-twin dressing: makes the sim look like a real GP12
+  cell (arm + controller cabinet + cabling), matching photos of an actual
+  YRC1000 install. VISUAL ONLY — no collision geometry, deliberately, so it
+  can never interfere with MoveIt planning/collision checking near the robot
+  base; this was chosen instead of adding real collision geometry precisely
+  because there is no simulator available to verify it wouldn't clip a real
+  motion plan before shipping this change.
+
+  Static colouring only (green status-panel plate, grey body) — it does NOT
+  currently react live to /yrc1000/status. Doing that would need a small
+  custom Gazebo material-set plugin/service (Gazebo classic has no stock
+  ROS2 way to recolour a link at runtime); left as a documented follow-up
+  rather than guessed at without a simulator available to verify it.
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="yrc1000_cabinet" params="parent_link xyz rpy">
+
+    <material name="yrc1000_body"><color rgba="0.85 0.85 0.85 1.0"/></material>
+    <material name="yrc1000_panel"><color rgba="0.05 0.6 0.05 1.0"/></material>
+    <material name="yrc1000_cable"><color rgba="0.1 0.1 0.1 1.0"/></material>
+
+    <link name="yrc1000_cabinet_link">
+      <visual>
+        <origin xyz="0 0 0.5" rpy="0 0 0"/>
+        <geometry><box size="0.55 0.50 1.00"/></geometry>
+        <material name="yrc1000_body"/>
+      </visual>
+      <!-- Front status-panel plate (colour-coded servo/alarm indicator) -->
+      <visual name="status_panel">
+        <origin xyz="0.276 0 0.85" rpy="0 0 0"/>
+        <geometry><box size="0.01 0.20 0.10"/></geometry>
+        <material name="yrc1000_panel"/>
+      </visual>
+      <inertial>
+        <mass value="45.0"/>
+        <origin xyz="0 0 0.5" rpy="0 0 0"/>
+        <inertia ixx="4.0" ixy="0" ixz="0" iyy="4.0" iyz="0" izz="2.0"/>
+      </inertial>
+    </link>
+
+    <joint name="${parent_link}_to_yrc1000_cabinet" type="fixed">
+      <parent link="${parent_link}"/>
+      <child link="yrc1000_cabinet_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+
+    <!-- Cable run from the cabinet up into the robot base (cosmetic only) -->
+    <link name="yrc1000_cable_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+        <geometry><cylinder radius="0.02" length="0.5"/></geometry>
+        <material name="yrc1000_cable"/>
+      </visual>
+      <inertial>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+      </inertial>
+    </link>
+
+    <joint name="yrc1000_cabinet_to_cable" type="fixed">
+      <parent link="yrc1000_cabinet_link"/>
+      <child link="yrc1000_cable_link"/>
+      <origin xyz="0.276 0 0.95" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="yrc1000_cabinet_link">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+    <gazebo reference="yrc1000_cable_link">
+      <material>Gazebo/Black</material>
+    </gazebo>
+
+  </xacro:macro>
+</robot>

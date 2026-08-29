@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd"
+            schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>warehouse_aruco_detection</name>
+  <version>0.0.0</version>
+  <description>
+    ArUco marker detection for the real Motoman GP12 warehouse robot.
+    Uses Intel RealSense D455 colour + aligned-depth streams.
+    Replaces the simulation HSV-colour yolo_node + depth_pose_estimation
+    pipeline with a single ArUco-based node that publishes identical
+    /object_pose and /detections_2d topics so pick_place_logic works
+    unchanged on the real robot.
+  </description>
+  <maintainer email="chaitanya@todo.todo">chaitanya</maintainer>
+  <license>TODO: License declaration</license>
+
+  <!-- Python build -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- ROS2 runtime dependencies -->
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>xacro</depend>
+  <depend>warehouse_robot_description</depend>
+  <depend>warehouse_moveit_config</depend>
+
+  <!-- ArUco / vision — provided by opencv-contrib (ros-humble-opencv4) -->
+  <!-- No separate ROS package needed; OpenCV aruco is in cv2.aruco -->
+
+  <!-- RealSense driver -->
+  <exec_depend>realsense2_camera</exec_depend>
+
+  <!-- Warehouse custom interfaces (Detection2D message) -->
+  <depend>warehouse_interfaces</depend>
+
+
+  <!-- Test dependencies -->
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

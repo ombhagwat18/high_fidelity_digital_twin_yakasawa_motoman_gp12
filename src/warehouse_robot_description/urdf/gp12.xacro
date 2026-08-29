@@ -1,0 +1,91 @@
+<?xml version="1.0" ?>
+<robot name="warehouse_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:arg name="controllers_file" default=""/>
+  <xacro:arg name="ros2_control_plugin" default="gazebo_ros2_control/GazeboSystem"/>
+  <xacro:arg name="embed_gazebo_ros2_control_plugin" default="true"/>
+
+  <xacro:include filename="$(find warehouse_robot_description)/urdf/gp12_macro.xacro" />
+  <xacro:include filename="$(find warehouse_robot_description)/urdf/vacuum_gripper.xacro" />
+  <xacro:include filename="$(find warehouse_robot_description)/urdf/realsense_d435.xacro" />
+  <xacro:include filename="$(find warehouse_robot_description)/urdf/yrc1000_cabinet.xacro" />
+  <xacro:motoman_gp12 prefix=""/>
+  <xacro:vacuum_gripper parent="tool0" prefix=""/>
+  <xacro:yrc1000_cabinet
+      parent_link="base_link"
+      xyz="-0.65 0.55 0"
+      rpy="0 0 0" />
+
+  <!--
+    Overhead + front RealSense D435 cameras. Names here ARE the runtime topic
+    namespace: the realsense_d435 macro's gazebo_ros_camera plugins publish under
+    /${camera_name}_color/... and /${camera_name}_depth/..., so top_camera /
+    front_camera below produce /top_camera_color/image_raw, /top_camera_depth/...,
+    /front_camera_color/image_raw, /front_camera_depth/... — this is the single
+    source of truth for camera mount geometry; perception nodes must read these
+    same xyz/rpy values rather than hardcoding their own guess.
+  -->
+  <xacro:realsense_d435
+      camera_name="top_camera"
+      parent_link="base_link"
+      xyz="0.75 0.00 1.50"
+      rpy="0 1.5708 0" />
+  <xacro:realsense_d435
+      camera_name="front_camera"
+      parent_link="base_link"
+      xyz="1.20 0.00 0.75"
+      rpy="0 0.7854 0" />
+
+  <ros2_control name="warehouse_robot" type="system">
+    <hardware>
+      <plugin>$(arg ros2_control_plugin)</plugin>
+    </hardware>
+
+    <joint name="joint_1_s">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint_2_l">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint_3_u">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint_4_r">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint_5_b">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint_6_t">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+
+  </ros2_control>
+
+  <xacro:if value="$(arg embed_gazebo_ros2_control_plugin)">
+    <gazebo>
+      <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <parameters>$(arg controllers_file)</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+</robot>

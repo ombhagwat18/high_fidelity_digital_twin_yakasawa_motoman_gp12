@@ -1,0 +1,229 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:macro name="motoman_gp12" params="prefix">
+    <!-- Local fallback so this package doesn't require motoman_resources. -->
+    <xacro:macro name="material_yaskawa_blue">
+        <material name="yaskawa_blue">
+            <color rgba="0.00 0.24 0.65 1.0"/>
+        </material>
+    </xacro:macro>
+
+    <xacro:macro name="link_inertial" params="mass ixx iyy izz">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="${mass}"/>
+            <inertia ixx="${ixx}" ixy="0" ixz="0"
+                     iyy="${iyy}" iyz="0"
+                     izz="${izz}"/>
+        </inertial>
+    </xacro:macro>
+
+    <xacro:property name="mesh_scale" value="1 1 1"/>
+
+    <!-- link list -->
+    <link name="${prefix}base_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/visual/gp12_base_link.stl" scale="${mesh_scale}"/>
+            </geometry>
+            <xacro:material_yaskawa_blue/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/collision/gp12_base_link.stl" scale="${mesh_scale}"/>
+            </geometry>
+        </collision>
+        <xacro:link_inertial mass="60.0" ixx="1.6" iyy="1.6" izz="1.2"/>
+    </link>
+    <link name="${prefix}link_1_s">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/visual/gp12_link_1_s.stl" scale="${mesh_scale}"/>
+            </geometry>
+            <xacro:material_yaskawa_blue/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/collision/gp12_link_1_s.stl" scale="${mesh_scale}"/>
+            </geometry>
+        </collision>
+        <xacro:link_inertial mass="35.0" ixx="0.9" iyy="0.9" izz="0.6"/>
+    </link>
+    <link name="${prefix}link_2_l">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/visual/gp12_link_2_l.stl" scale="${mesh_scale}"/>
+            </geometry>
+            <xacro:material_yaskawa_blue/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/collision/gp12_link_2_l.stl" scale="${mesh_scale}"/>
+            </geometry>
+        </collision>
+        <xacro:link_inertial mass="28.0" ixx="0.7" iyy="0.7" izz="0.5"/>
+    </link>
+    <link name="${prefix}link_3_u">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/visual/gp12_link_3_u.stl" scale="${mesh_scale}"/>
+            </geometry>
+            <xacro:material_yaskawa_blue/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/collision/gp12_link_3_u.stl" scale="${mesh_scale}"/>
+            </geometry>
+        </collision>
+        <xacro:link_inertial mass="22.0" ixx="0.45" iyy="0.45" izz="0.32"/>
+    </link>
+    <link name="${prefix}link_4_r">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/visual/gp12_link_4_r.stl" scale="${mesh_scale}"/>
+            </geometry>
+            <xacro:material_yaskawa_blue/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/collision/gp12_link_4_r.stl" scale="${mesh_scale}"/>
+            </geometry>
+        </collision>
+        <xacro:link_inertial mass="12.0" ixx="0.16" iyy="0.16" izz="0.12"/>
+    </link>
+    <link name="${prefix}link_5_b">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/visual/gp12_link_5_b.stl" scale="${mesh_scale}"/>
+            </geometry>
+            <xacro:material_yaskawa_blue/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/collision/gp12_link_5_b.stl" scale="${mesh_scale}"/>
+            </geometry>
+        </collision>
+        <xacro:link_inertial mass="8.0" ixx="0.08" iyy="0.08" izz="0.06"/>
+    </link>
+    <link name="${prefix}link_6_t">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/visual/gp12_link_6_t.stl" scale="${mesh_scale}"/>
+            </geometry>
+            <xacro:material_yaskawa_blue/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://warehouse_robot_description/meshes/collision/gp12_link_6_t.stl" scale="${mesh_scale}"/>
+            </geometry>
+        </collision>
+        <xacro:link_inertial mass="4.0" ixx="0.03" iyy="0.03" izz="0.02"/>
+    </link>
+    <!-- end of link list -->
+
+    <!-- joint list -->
+    <joint name="${prefix}joint_1_s" type="revolute">
+        <parent link="${prefix}base_link"/>
+        <child link="${prefix}link_1_s"/>
+        <origin xyz="0 0 0.450" rpy="0 0 0" />
+        <axis xyz="0 0 1" />
+        <limit lower="-2.9670" upper="2.9670" effort="926.10" velocity="4.5355"/>
+    </joint>
+    <joint name="${prefix}joint_2_l" type="revolute">
+        <parent link="${prefix}link_1_s"/>
+        <child link="${prefix}link_2_l"/>
+        <origin xyz="0.155 0 0" rpy="0 0 0" />
+        <axis xyz="0 1 0" />
+        <limit lower="-1.5708" upper="2.7052" effort="1029.00" velocity="4.0132"/>
+    </joint>
+    <joint name="${prefix}joint_3_u" type="revolute">
+        <parent link="${prefix}link_2_l"/>
+        <child link="${prefix}link_3_u"/>
+        <origin xyz="0 0 0.614" rpy="0 0 0" />
+        <axis xyz="0 -1 0" />
+        <limit lower="-1.4835" upper="2.6179" effort="551.25" velocity="4.5375"/>
+    </joint>
+    <joint name="${prefix}joint_4_r" type="revolute">
+        <parent link="${prefix}link_3_u"/>
+        <child link="${prefix}link_4_r"/>
+        <origin xyz="0.640 0 0.200" rpy="0 0 0" />
+        <axis xyz="-1 0 0" />
+        <limit lower="-3.4906" upper="3.4906" effort="89.96" velocity="8.2007"/>
+    </joint>
+    <joint name="${prefix}joint_5_b" type="revolute">
+        <parent link="${prefix}link_4_r"/>
+        <child link="${prefix}link_5_b"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <axis xyz="0 -1 0" />
+        <limit lower="-2.6179" upper="2.6179" effort="67.03" velocity="8.1992"/>
+    </joint>
+    <joint name="${prefix}joint_6_t" type="revolute">
+        <parent link="${prefix}link_5_b"/>
+        <child link="${prefix}link_6_t"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <axis xyz="-1 0 0" />
+        <limit lower="-7.9412" upper="7.9412" effort="33.30" velocity="12.2143"/>
+    </joint>
+    <!-- end of joint list -->
+
+    <!-- ROS base_link to Robot Manufacturer World Coordinates transform -->
+    <link name="${prefix}base" />
+    <joint name="${prefix}base_link-base" type="fixed">
+        <origin xyz="0 0 0.450" rpy="0 0 0"/>
+        <parent link="${prefix}base_link"/>
+        <child link="${prefix}base"/>
+    </joint>
+
+    <!-- ROS-Industrial 'flange' frame: attachment point for EEF models -->
+    <link name="${prefix}flange"/>
+    <joint name="${prefix}joint_6_t-flange" type="fixed">
+      <origin xyz="0.100 0 0" rpy="0 0 0"/>
+      <parent link="${prefix}link_6_t"/>
+      <child link="${prefix}flange"/>
+    </joint>
+
+    <!-- ROS-Industrial 'tool0' frame: all-zeros tool frame -->
+    <link name="${prefix}tool0"/>
+    <joint name="${prefix}flange-tool0" type="fixed">
+      <origin xyz="0 0 0" rpy="3.1415926 -1.570796 0"/>
+      <parent link="${prefix}flange"/>
+      <child link="${prefix}tool0"/>
+    </joint>
+
+    <gazebo reference="${prefix}base_link">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="${prefix}link_1_s">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="${prefix}link_2_l">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="${prefix}link_3_u">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="${prefix}link_4_r">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="${prefix}link_5_b">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="${prefix}link_6_t">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+</xacro:macro>
+</robot>

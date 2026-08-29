@@ -1,0 +1,15 @@
+build/
+install/
+log/
+
+*.pyc
+__pycache__/
+
+.vscode/
+.idea/
+
+*.swp
+
+# Dead weight from the removed YOLO-based perception pipeline (see
+# docs/architecture/README.md) — nothing in the codebase references it.
+yolov8n.pt

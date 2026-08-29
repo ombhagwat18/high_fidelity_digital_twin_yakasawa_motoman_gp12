@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""
+gazebo.launch.py  — warehouse_gazebo
+======================================
+FIXES applied vs original:
+
+FIX1: Removed the package:// -> file:// URI replacement entirely.
+      Gazebo 11 + gazebo_ros CAN resolve package:// URIs natively through
+      ament resource index when the package is installed. Doing a string
+      replace with Path.as_uri() is fragile (breaks if install prefix has
+      spaces, symlinks, or if Gazebo is run in a container).
+      Instead we pass the raw xacro-processed URDF (which still has
+      package:// URIs) directly to both RSP and spawn_entity.
+      RSP does NOT need file:// - it only publishes the XML string.
+      Gazebo resolves package:// via its own resource resolver.
+
+FIX2: Removed re.sub(r'<!--.*?-->', '', raw_urdf, flags=re.DOTALL).
+      The DOTALL flag makes the regex consume content across line boundaries.
+      While non-greedy (.*?), pathological XML comments (e.g. inside CDATA)
+      or xacro-generated markers can cause it to strip real XML nodes.
+      A clean xacro output does not need comment stripping. Removed entirely.
+
+FIX3: Changed spawn z from 0.05 to 0.0.
+      The GP12 base_link collision mesh starts at z=0 in model space.
+      At z=0.05 the robot floats 5cm up and then drops, causing physics
+      jitter that can corrupt joint state initialization and make upper
+      links appear to "shake off" their visual binding in Gazebo.
+      z=0.0 places the robot flush on the ground plane as designed.
+
+FIX4: GAZEBO_RESOURCE_PATH now appends rather than replaces.
+      The original code set it to a hardcoded path. If /usr/share/gazebo-11
+      does not exist on the system (some distros use /usr/share/gazebo or
+      /usr/share/gazebo-11.10.x), Gazebo/Blue and all default materials
+      become unresolvable. Links then render as invisible (no material fallback).
+      Fixed by reading the existing env var and prepending to it.
+
+FIX5: urdf_file_path removed from spawn_entity args, replaced with -topic.
+      Passing a tmpfile via -file works, but only if the tmpfile is not
+      garbage-collected before Gazebo reads it (race condition on slow machines).
+      Safer: pass -topic /robot_description which RSP publishes reliably.
+      RSP is started before Gazebo and before the 6s spawn timer, so the
+      topic is always populated when spawn_entity runs.
+"""
+import os
+from pathlib import Path
+
+import xacro
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    LogInfo,
+    RegisterEventHandler,
+    SetEnvironmentVariable,
+    TimerAction,
+)
+from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.event_handlers import OnProcessExit
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    robot_desc_pkg = get_package_share_directory('warehouse_robot_description')
+    sim_pkg        = get_package_share_directory('warehouse_gazebo')
+    gazebo_ros_pkg = get_package_share_directory('gazebo_ros')
+
+    controllers_yaml = os.path.join(robot_desc_pkg, 'config', 'arm_controllers.yaml')
+    sim_models_dir   = os.path.join(sim_pkg, 'models')
+    home_gazebo_models = os.path.join(os.path.expanduser('~'), '.gazebo', 'models')
+
+    # ── Launch arguments ────────────────────────────────────────────────────
+    world_arg             = DeclareLaunchArgument('world', default_value='warehouse_industrial.world')
+    gui_arg               = DeclareLaunchArgument('gui', default_value='true')
+    use_sim_time_arg      = DeclareLaunchArgument('use_sim_time', default_value='true')
+    use_camera_tfs_arg    = DeclareLaunchArgument('use_camera_tfs', default_value='true')
+    spawn_products_arg    = DeclareLaunchArgument('spawn_products', default_value='true')
+    top_camera_x_arg      = DeclareLaunchArgument('top_camera_x', default_value='0.75')
+    top_camera_y_arg      = DeclareLaunchArgument('top_camera_y', default_value='0.0')
+    top_camera_z_arg      = DeclareLaunchArgument('top_camera_z', default_value='1.50')
+    top_camera_yaw_arg    = DeclareLaunchArgument('top_camera_yaw', default_value='1.5708')
+    front_camera_x_arg    = DeclareLaunchArgument('front_camera_x', default_value='1.20')
+    front_camera_y_arg    = DeclareLaunchArgument('front_camera_y', default_value='0.0')
+    front_camera_z_arg    = DeclareLaunchArgument('front_camera_z', default_value='0.75')
+    front_camera_yaw_arg  = DeclareLaunchArgument('front_camera_yaw', default_value='0.7854')
+
+    world_file     = LaunchConfiguration('world')
+    gui            = LaunchConfiguration('gui')
+    use_sim_time   = LaunchConfiguration('use_sim_time')
+    use_camera_tfs = LaunchConfiguration('use_camera_tfs')
+    spawn_products = LaunchConfiguration('spawn_products')
+    top_camera_x   = LaunchConfiguration('top_camera_x')
+    top_camera_y   = LaunchConfiguration('top_camera_y')
+    top_camera_z   = LaunchConfiguration('top_camera_z')
+    top_camera_yaw = LaunchConfiguration('top_camera_yaw')
+    front_camera_x = LaunchConfiguration('front_camera_x')
+    front_camera_y = LaunchConfiguration('front_camera_y')
+    front_camera_z = LaunchConfiguration('front_camera_z')
+    front_camera_yaw = LaunchConfiguration('front_camera_yaw')
+
+    # ── Environment variables ─────────────────────────────────────────────
+    os.environ['GAZEBO_MODEL_DATABASE_URI'] = ''
+    env_no_db = SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', '')
+
+    os.environ['OGRE_RTT_MODE'] = 'Copy'
+    env_ogre = SetEnvironmentVariable('OGRE_RTT_MODE', 'Copy')
+
+    model_path = sim_models_dir + ':' + home_gazebo_models
+    os.environ['GAZEBO_MODEL_PATH'] = model_path
+    env_gz_model_path = SetEnvironmentVariable('GAZEBO_MODEL_PATH', model_path)
+
+    # FIX4: APPEND to existing GAZEBO_RESOURCE_PATH rather than overwriting.
+    # This preserves the default Gazebo material/shader paths so that
+    # Gazebo/Blue and other built-in materials remain available.
+    existing_resource_path = os.environ.get('GAZEBO_RESOURCE_PATH', '')
+    extra_resource_paths = '/usr/share/gazebo-11:/usr/share/gazebo'
+    full_resource_path = (extra_resource_paths + ':' + existing_resource_path).rstrip(':')
+    os.environ['GAZEBO_RESOURCE_PATH'] = full_resource_path
+    env_gz_resource = SetEnvironmentVariable('GAZEBO_RESOURCE_PATH', full_resource_path)
+
+    # ── Process GP12 xacro ───────────────────────────────────────────────
+    # FIX1 + FIX2: Process xacro directly. Keep package:// URIs intact —
+    # Gazebo resolves them via ament resource index. No comment stripping.
+    robot_description_xml = xacro.process_file(
+        os.path.join(robot_desc_pkg, 'urdf', 'gp12.xacro'),
+        mappings={'controllers_file': controllers_yaml},
+    ).toxml()
+
+    # ── Nodes ─────────────────────────────────────────────────────────────
+    robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': robot_description_xml,
+            'use_sim_time': use_sim_time,
+        }],
+    )
+
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(gazebo_ros_pkg, 'launch', 'gazebo.launch.py')
+        ),
+        launch_arguments={
+            'world': PathJoinSubstitution([sim_pkg, 'worlds', world_file]),
+            'gui': gui,
+            'verbose': 'true',
+        }.items(),
+    )
+
+    # FIX3: z=0.0 — robot sits flush on ground as mesh collision geometry intends.
+    # FIX5: Use -topic /robot_description instead of -file to avoid tmpfile race condition.
+    spawn_robot_node = Node(
+        package='gazebo_ros',
+        executable='spawn_entity.py',
+        name='spawn_robot',
+        output='screen',
+        arguments=[
+            '-entity', 'warehouse_robot',
+            '-topic', '/robot_description',
+            '-x', '0.0',
+            '-y', '0.0',
+            '-z', '0.0',       # FIX3: was 0.05 → causes physics jitter + visual loss
+            '-R', '0', '-P', '0', '-Y', '0',
+        ],
+    )
+
+    spawn_robot = TimerAction(
+        period=6.0,
+        actions=[spawn_robot_node],
+    )
+
+    jsb_spawner_node = Node(
+        package='controller_manager',
+        executable='spawner',
+        name='jsb_spawner',
+        output='screen',
+        arguments=[
+            'joint_state_broadcaster',
+            '--controller-manager', '/controller_manager',
+        ],
+    )
+
+    jsb_spawner = TimerAction(period=2.0, actions=[jsb_spawner_node])
+
+    jsb_after_spawn = RegisterEventHandler(
+        OnProcessExit(
+            target_action=spawn_robot_node,
+            on_exit=[jsb_spawner],
+        )
+    )
+
+    arm_spawner_node = Node(
+        package='controller_manager',
+        executable='spawner',
+        name='arm_spawner',
+        output='screen',
+        arguments=[
+            'arm_controller',
+            '--controller-manager', '/controller_manager',
+        ],
+    )
+
+    arm_spawner = TimerAction(period=2.0, actions=[arm_spawner_node])
+
+    arm_after_jsb = RegisterEventHandler(
+        OnProcessExit(
+            target_action=jsb_spawner_node,
+            on_exit=[arm_spawner],
+        )
+    )
+
+    world_to_base_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='world_to_base_static_tf',
+        arguments=[
+            '--x', '0', '--y', '0', '--z', '0',
+            '--roll', '0', '--pitch', '0', '--yaw', '0',
+            '--frame-id', 'world',
+            '--child-frame-id', 'base_link',
+        ],
+    )
+
+    conveyor_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='conveyor_tf_publisher',
+        arguments=[
+            '--x', '0.75', '--y', '0', '--z', '0.12',
+            '--roll', '0', '--pitch', '0', '--yaw', '0',
+            '--frame-id', 'world',
+            '--child-frame-id', 'conveyor_base_link',
+        ],
+    )
+
+    top_camera_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='top_camera_static_tf',
+        condition=IfCondition(use_camera_tfs),
+        arguments=[
+            '--x', top_camera_x, '--y', top_camera_y, '--z', top_camera_z,
+            '--roll', '0', '--pitch', '0', '--yaw', top_camera_yaw,
+            '--frame-id', 'world',
+            '--child-frame-id', 'top_camera_color_optical_frame',
+        ],
+    )
+
+    front_camera_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='front_camera_static_tf',
+        condition=IfCondition(use_camera_tfs),
+        arguments=[
+            '--x', front_camera_x, '--y', front_camera_y, '--z', front_camera_z,
+            '--roll', '0', '--pitch', '0', '--yaw', front_camera_yaw,
+            '--frame-id', 'world',
+            '--child-frame-id', 'front_camera_color_optical_frame',
+        ],
+    )
+
+    product_spawner = Node(
+        package='warehouse_gazebo',
+        executable='product_spawner',
+        name='product_spawner',
+        output='screen',
+        condition=IfCondition(spawn_products),
+    )
+
+    product_spawner_after_arm = RegisterEventHandler(
+        OnProcessExit(
+            target_action=arm_spawner_node,
+            on_exit=[
+                TimerAction(period=5.0, actions=[product_spawner]),
+            ],
+        )
+    )
+
+    camera_info_log = TimerAction(
+        period=5.0,
+        actions=[LogInfo(msg=(
+            '\n[warehouse_gazebo] Cameras active:\n'
+            '  /front_camera/color/image_raw\n'
+            '  /front_camera/depth/image_raw\n'
+            '  /front_camera/depth/points\n'
+            '  /top_camera/color/image_raw\n'
+            '  /top_camera/depth/image_raw\n'
+            '  /top_camera/depth/points\n'
+        ))],
+    )
+
+    return LaunchDescription([
+        env_no_db,
+        env_ogre,
+        env_gz_resource,
+        env_gz_model_path,
+        world_arg,
+        gui_arg,
+        use_sim_time_arg,
+        use_camera_tfs_arg,
+        spawn_products_arg,
+        top_camera_x_arg,
+        top_camera_y_arg,
+        top_camera_z_arg,
+        top_camera_yaw_arg,
+        front_camera_x_arg,
+        front_camera_y_arg,
+        front_camera_z_arg,
+        front_camera_yaw_arg,
+        robot_state_publisher,
+        gazebo,
+        spawn_robot,
+        jsb_after_spawn,
+        arm_after_jsb,
+        world_to_base_tf,
+        conveyor_tf,
+        top_camera_tf,
+        front_camera_tf,
+        product_spawner_after_arm,
+        camera_info_log,
+    ])

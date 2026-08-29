@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: warehouse_robot_description
+    relative_path: urdf/gp12.xacro
+  srdf:
+    relative_path: config/warehouse_robot.srdf
+  package_settings:
+    author_name: ""
+    author_email: ""
+    generated_timestamp: 1774357799

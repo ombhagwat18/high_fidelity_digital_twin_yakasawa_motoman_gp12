@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!--
+  warehouse.world  — FIXED
+  =========================
+  FIX WARN#1: model://conveyor changed to model://conveyor_belt (matches folder name)
+  Added: teach pendant + E-stop stand, safety floor tape
+-->
+<sdf version="1.6">
+  <world name="warehouse">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Conveyor Belt — FIX: was model://conveyor (wrong), now model://conveyor_belt -->
+    <include>
+      <uri>model://conveyor_belt</uri>
+      <pose>0.75 0 0.12 0 0 0</pose>
+    </include>
+
+    <!-- Work table / bucket area -->
+    <model name="table">
+      <static>true</static>
+      <link name="table_link">
+        <pose>0 0 0.4 0 0 0</pose>
+        <collision name="c">
+          <geometry><box><size>2.0 1.0 0.05</size></box></geometry>
+        </collision>
+        <visual name="v">
+          <geometry><box><size>2.0 1.0 0.05</size></box></geometry>
+          <material>
+            <ambient>0.45 0.28 0.12 1</ambient>
+            <diffuse>0.52 0.32 0.15 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>2.5 0 0.0 0 0 0</pose>
+    </model>
+
+    <!-- Teach pendant + E-stop stand (placed outside robot safety cell) -->
+    <model name="teach_pendant_stand">
+      <static>true</static>
+      <pose>-0.9 -0.9 0 0 0 0.7854</pose>
+      <link name="link">
+        <!-- Pole -->
+        <visual name="pole">
+          <pose>0 0 0.6 0 0 0</pose>
+          <geometry><cylinder><radius>0.022</radius><length>1.2</length></cylinder></geometry>
+          <material><ambient>0.25 0.25 0.25 1</ambient></material>
+        </visual>
+        <!-- Pendant body -->
+        <visual name="pendant">
+          <pose>0 0.04 1.05 0.35 0 0</pose>
+          <geometry><box><size>0.18 0.025 0.28</size></box></geometry>
+          <material><ambient>0.12 0.12 0.14 1</ambient><diffuse>0.18 0.18 0.20 1</diffuse></material>
+        </visual>
+        <!-- E-stop button (red mushroom cap) -->
+        <visual name="estop_cap">
+          <pose>0.04 0.065 1.22 0.35 0 0</pose>
+          <geometry><cylinder><radius>0.022</radius><length>0.014</length></cylinder></geometry>
+          <material><ambient>0.88 0.04 0.04 1</ambient><diffuse>0.95 0.05 0.05 1</diffuse></material>
+        </visual>
+        <!-- Enable / deadman button (green) -->
+        <visual name="enable_btn">
+          <pose>-0.04 0.065 1.22 0.35 0 0</pose>
+          <geometry><cylinder><radius>0.014</radius><length>0.010</length></cylinder></geometry>
+          <material><ambient>0.05 0.75 0.05 1</ambient></material>
+        </visual>
+        <!-- Screen -->
+        <visual name="screen">
+          <pose>0 0.055 0.98 0.35 0 0</pose>
+          <geometry><box><size>0.13 0.010 0.10</size></box></geometry>
+          <material><ambient>0.04 0.08 0.18 1</ambient><diffuse>0.06 0.12 0.28 1</diffuse></material>
+        </visual>
+        <collision name="c">
+          <pose>0 0 0.6 0 0 0</pose>
+          <geometry><cylinder><radius>0.025</radius><length>1.2</length></cylinder></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Safety tape on floor around robot cell (1.0 m radius) -->
+    <model name="floor_tape_n"><static>true</static><pose>0  1.0 0.002 0 0 0</pose>
+      <link name="l"><visual name="v"><geometry><box><size>2.0 0.05 0.002</size></box></geometry>
+        <material><ambient>0.95 0.85 0.0 1</ambient></material></visual></link></model>
+    <model name="floor_tape_s"><static>true</static><pose>0 -1.0 0.002 0 0 0</pose>
+      <link name="l"><visual name="v"><geometry><box><size>2.0 0.05 0.002</size></box></geometry>
+        <material><ambient>0.95 0.85 0.0 1</ambient></material></visual></link></model>
+    <model name="floor_tape_w"><static>true</static><pose>-1.0 0 0.002 0 0 0</pose>
+      <link name="l"><visual name="v"><geometry><box><size>0.05 2.0 0.002</size></box></geometry>
+        <material><ambient>0.95 0.85 0.0 1</ambient></material></visual></link></model>
+    <model name="floor_tape_e"><static>true</static><pose>1.0 0 0.002 0 0 0</pose>
+      <link name="l"><visual name="v"><geometry><box><size>0.05 2.0 0.002</size></box></geometry>
+        <material><ambient>0.95 0.85 0.0 1</ambient></material></visual></link></model>
+
+  </world>
+</sdf>

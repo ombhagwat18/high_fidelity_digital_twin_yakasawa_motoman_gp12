@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="warehouse">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Main Conveyor -->
+    <include>
+      <uri>model://conveyor_belt</uri>
+      <pose>0.8 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Pick Area Table -->
+    <model name="pick_table">
+      <static>true</static>
+      <pose>2.5 0 0.0 0 0 0</pose>
+      <link name="table_link">
+        <visual>
+          <geometry><box><size>1.8 1.2 0.05</size></box></geometry>
+          <material><ambient>0.4 0.3 0.2 1</ambient></material>
+        </visual>
+        <collision>
+          <geometry><box><size>1.8 1.2 0.05</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Good / Defective Bins -->
+    <include>
+      <uri>model://bin_good</uri>
+      <pose>3.0 0.8 0.0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://bin_defective</uri>
+      <pose>3.0 -0.8 0.0 0 0 0</pose>
+    </include>
+  </world>
+</sdf>

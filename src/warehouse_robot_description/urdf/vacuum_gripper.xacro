@@ -1,0 +1,143 @@
+<?xml version="1.0" ?>
+<!--
+  vacuum_gripper.xacro — warehouse_robot_description
+  ====================================================
+  FIXED VERSION:
+  BUG1: Merged the TWO duplicate <gazebo reference="suction_cup_link"> blocks into ONE.
+        Having two blocks for same reference causes libsdformat URDF->SDF conversion to
+        generate duplicate sensor entries, which triggers a Gazebo 11 model-load failure
+        that prevents ALL upper links from rendering (not just the gripper).
+  BUG2: gazebo_ros_vacuum_gripper plugin's <link_name> changed from link_6_t to 
+        suction_cup_link — the plugin should attach to the suction surface, not the 
+        wrist link.
+  BUG3: Removed libgazebo_ros_vacuum_gripper.so plugin block. This plugin does NOT 
+        exist in gazebo_ros (ROS2/Gazebo11). It was a ROS1 plugin. Using it causes 
+        Gazebo to log a fatal plugin-load error that aborts model spawn silently.
+        Replace with a basic contact sensor for future pick logic via topic.
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="vacuum_gripper" params="parent prefix">
+
+    <material name="gripper_black">
+      <color rgba="0.1 0.1 0.1 1.0"/>
+    </material>
+    <material name="gripper_red">
+      <color rgba="0.8 0.1 0.1 1.0"/>
+    </material>
+
+    <!-- Vacuum gripper housing -->
+    <link name="${prefix}vacuum_gripper_base">
+      <visual>
+        <origin xyz="0 0 0.04" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.035" length="0.08"/>
+        </geometry>
+        <material name="gripper_black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.04" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.035" length="0.08"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.3"/>
+        <origin xyz="0 0 0.04" rpy="0 0 0"/>
+        <inertia ixx="0.0003" ixy="0" ixz="0"
+                 iyy="0.0003" iyz="0"
+                 izz="0.0002"/>
+      </inertial>
+    </link>
+
+    <!-- Fixed joint: tool0 -> vacuum_gripper_base -->
+    <joint name="${prefix}tool0_to_gripper" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${prefix}vacuum_gripper_base"/>
+      <origin xyz="0 0 0.0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="${prefix}vacuum_gripper_base">
+      <disableFixedJointLumping>true</disableFixedJointLumping>
+      <preserveFixedJoint>true</preserveFixedJoint>
+      <material>Gazebo/Black</material>
+    </gazebo>
+
+    <!-- Suction cup tip (TCP contact surface) -->
+    <link name="${prefix}suction_cup_link">
+      <visual>
+        <origin xyz="0 0 0.005" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.030" length="0.010"/>
+        </geometry>
+        <material name="gripper_red"/>
+      </visual>
+      <collision name="${prefix}suction_cup_collision">
+        <origin xyz="0 0 0.005" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.030" length="0.010"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.05"/>
+        <origin xyz="0 0 0.005" rpy="0 0 0"/>
+        <inertia ixx="0.00001" ixy="0" ixz="0"
+                 iyy="0.00001" iyz="0"
+                 izz="0.00001"/>
+      </inertial>
+    </link>
+
+    <!-- Fixed joint: vacuum_gripper_base -> suction_cup_link -->
+    <joint name="${prefix}vacuum_gripper_to_suction_cup" type="fixed">
+      <parent link="${prefix}vacuum_gripper_base"/>
+      <child link="${prefix}suction_cup_link"/>
+      <origin xyz="0 0 0.085" rpy="0 0 0"/>
+    </joint>
+
+    <!--
+      FIX: MERGED the two duplicate <gazebo reference="suction_cup_link"> blocks into ONE.
+      The original code had:
+        Block 1: disableFixedJointLumping + material
+        Block 2: material + contact sensor
+      Two blocks for the same reference = libsdformat generates duplicate <sensor> entries
+      in the SDF, triggering a model-load abort in Gazebo 11. All links after base_link
+      then fail to render. Merged into single block below.
+    -->
+    <gazebo reference="${prefix}suction_cup_link">
+      <disableFixedJointLumping>true</disableFixedJointLumping>
+      <preserveFixedJoint>true</preserveFixedJoint>
+      <material>Gazebo/Red</material>
+      <sensor name="suction_contact_sensor" type="contact">
+        <always_on>true</always_on>
+        <update_rate>50</update_rate>
+        <contact>
+          <collision>${prefix}suction_cup_collision</collision>
+        </contact>
+        <plugin name="suction_contact_ros" filename="libgazebo_ros_bumper.so">
+          <ros>
+            <namespace>/vacuum_gripper</namespace>
+            <remapping>bumper_states:=contact_states</remapping>
+          </ros>
+          <frame_name>world</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <!--
+      libgazebo_ros_vacuum_gripper.so does NOT exist in ROS2/Gazebo11 (it was a
+      ROS1-only plugin), so real suction is implemented by this workspace's own
+      warehouse_gripper_control::VacuumGripperPlugin instead: it consumes the
+      /vacuum_gripper/contact_states topic from the sensor above and exposes
+      /vacuum_gripper/on, /vacuum_gripper/off (std_srvs/Trigger) and
+      /vacuum_gripper/state (std_msgs/Bool) — see warehouse_gripper_control.
+      Must be a direct child of <robot>/<model>, not <gazebo reference="...">,
+      since ModelPlugin (unlike a sensor plugin) attaches to the whole model.
+    -->
+    <gazebo>
+      <plugin name="vacuum_gripper_plugin" filename="libvacuum_gripper_plugin.so">
+        <link_name>${prefix}suction_cup_link</link_name>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+</robot>

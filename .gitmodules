@@ -1,0 +1,3 @@
+[submodule "src/motoman_ros2_support_packages"]
+	path = src/motoman_ros2_support_packages
+	url = https://github.com/Yaskawa-Global/motoman_ros2_support_packages.git

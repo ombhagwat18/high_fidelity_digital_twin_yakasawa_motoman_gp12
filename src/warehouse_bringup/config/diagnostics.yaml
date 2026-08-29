@@ -1,0 +1,24 @@
+# diagnostic_aggregator config — groups the per-node /diagnostics reports
+# (published by yrc1000_controller, parcel_perception, pick_place_logic, and
+# warehouse_gripper_control's VacuumGripperPlugin) into named subsystems for
+# `ros2 run rqt_robot_monitor rqt_robot_monitor` to display.
+analyzers:
+  ros__parameters:
+    path: GP12DigitalTwin
+    analyzers:
+      controller:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: Controller
+        contains: ["Controller"]
+      perception:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: Perception
+        contains: ["Perception"]
+      pick_place:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: PickPlace
+        contains: ["PickPlace"]
+      gripper:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: Gripper
+        contains: ["Gripper"]

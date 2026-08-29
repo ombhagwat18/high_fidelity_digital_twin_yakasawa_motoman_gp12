@@ -1,0 +1,24 @@
+aruco_detector:
+  ros__parameters:
+    marker_size_m: 0.10
+    aruco_dict: "DICT_4X4_50"
+    id_label_map: '{"0":"good","1":"defective"}'
+    top_camera_frame: "top_camera_color_optical_frame"
+    front_camera_frame: "front_camera_color_optical_frame"
+    world_frame: "world"
+    depth_scale: 0.001
+    depth_roi_px: 5
+    show_window: false
+
+extrinsic_calibrator:
+  ros__parameters:
+    marker_size_m: 0.10
+    aruco_dict: "DICT_4X4_50"
+    world_frame: "world"
+    top_camera_frame: "top_camera_color_optical_frame"
+    front_camera_frame: "front_camera_color_optical_frame"
+    # Known fixed reference markers in world frame (meters, yaw radians).
+    # Replace with your measured board/marker positions in the real cell.
+    reference_markers_json: '{"0":{"x":0.75,"y":0.0,"z":0.0,"yaw":0.0}}'
+    calib_min_markers: 1
+    calib_alpha: 0.2
