@@ -23,6 +23,12 @@
 
 <img src="docs/media/robot_arm.svg" alt="GP12 arm reaching for an ArUco-tagged parcel on the conveyor (original illustration)" width="640"/>
 
+<br/><br/>
+
+<img src="docs/media/gp12_yaskawa_spec.jpg" alt="Official Yaskawa Motoman GP12 dimension and reach-envelope diagram" width="640"/>
+
+<sub>The real robot this digital twin models — official Yaskawa Motoman GP12 dimension/reach-envelope diagram. © Yaskawa Motoman, from their MODEX 2024 spec sheet, used here for reference only.</sub>
+
 </div>
 
 <br/>
