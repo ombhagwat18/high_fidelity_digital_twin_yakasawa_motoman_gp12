@@ -19,6 +19,10 @@
 [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)]()
 [![Visitors](https://api.visitorbadge.io/api/visitors?path=ombhagwat18%2Fhigh_fidelity_digital_twin_yakasawa_motoman_gp12&countColor=%232C5364&style=flat-square)]()
 
+<br/>
+
+<img src="docs/media/robot_arm.svg" alt="GP12 arm reaching for an ArUco-tagged parcel on the conveyor (original illustration)" width="640"/>
+
 </div>
 
 <br/>
@@ -208,9 +212,12 @@ ros2 service call /yrc1000/estop std_srvs/srv/SetBool "{data: true}"
 
 ## 🎬 Demo
 
-> 🎥 **Screenshots/GIFs coming soon.** This project is simulation-only right now — drop your own
-> Gazebo/RViz recordings into `docs/media/` and reference them here
-> (e.g. `docs/media/pick_cycle.gif`, `docs/media/operator_dashboard.png`) once you've captured a run.
+The banner illustration above is an original hand-drawn SVG (`docs/media/robot_arm.svg`), not a
+screenshot — this project is simulation-only right now, and no Gazebo/RViz recordings exist yet.
+
+> 🎥 **Real screenshots/GIFs coming soon.** Drop your own Gazebo/RViz recordings into `docs/media/`
+> and reference them here (e.g. `docs/media/pick_cycle.gif`, `docs/media/operator_dashboard.png`)
+> once you've captured a run — see `docs/media/README.md` for the suggested capture list.
 
 <br/>
 
