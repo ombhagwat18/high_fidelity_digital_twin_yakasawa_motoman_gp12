@@ -13,14 +13,96 @@ responsible.
 
 ---
 
-## 0. Build
+## 0. Prerequisites — install ROS2 Humble, Gazebo11, MoveIt2 from scratch
+
+Skip straight to §1 if you already have a working ROS2 Humble + Gazebo11 +
+MoveIt2 desktop install. Otherwise, on a fresh **Ubuntu 22.04** machine (or
+WSL2 running Ubuntu 22.04 — plain Windows won't work, there is no ROS2/
+Gazebo for it):
 
 ```bash
-# Fresh clone — grabs the vendored Yaskawa submodule too
+# ── Locale (first-time ROS2 install requirement) ──────────────────────────
+sudo apt update && sudo apt install locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+# ── Add the ROS2 apt repository ───────────────────────────────────────────
+sudo apt install software-properties-common curl -y
+sudo add-apt-repository universe
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+  -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+  http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | \
+  sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+sudo apt update && sudo apt upgrade -y
+
+# ── ROS2 Humble desktop (RViz2, rqt, demos included) ──────────────────────
+sudo apt install ros-humble-desktop -y
+
+# ── Gazebo11 classic + the ROS2⇄Gazebo bridge packages this repo needs ────
+sudo apt install ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros2-control \
+  ros-humble-gazebo-dev ros-humble-gazebo-msgs -y
+
+# ── MoveIt2 + everything warehouse_moveit_config's package.xml expects ────
+sudo apt install ros-humble-moveit ros-humble-moveit-planners \
+  ros-humble-moveit-simple-controller-manager ros-humble-moveit-ros-move-group \
+  ros-humble-moveit-ros-visualization ros-humble-moveit-ros-warehouse \
+  ros-humble-moveit-setup-assistant ros-humble-warehouse-ros-mongo \
+  ros-humble-joint-state-publisher-gui -y
+
+# ── ros2_control, diagnostics, and small tools this project uses ─────────
+sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers \
+  ros-humble-controller-manager ros-humble-diagnostic-updater \
+  ros-humble-diagnostic-aggregator ros-humble-rqt-robot-monitor \
+  ros-humble-rqt-image-view ros-humble-tf2-tools ros-humble-xacro \
+  ros-humble-cv-bridge -y
+
+# ── OpenCV with the aruco module (cv2.aruco — required by perception AND
+#    by the build-time marker-texture generator) ──────────────────────────
+python3 -m pip install --upgrade pip
+python3 -m pip install opencv-contrib-python pyyaml
+
+# ── colcon (build tool) + rosdep (dependency installer) ───────────────────
+sudo apt install python3-colcon-common-extensions python3-rosdep python3-vcstool -y
+sudo rosdep init          # only if this is the machine's first-ever rosdep init
+rosdep update
+
+# ── Source the ROS2 underlay in every new terminal (or add to ~/.bashrc) ──
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+source /opt/ros/humble/setup.bash
+
+# ── Sanity-check the install before touching this repo at all ────────────
+ros2 doctor --report | head -30
+gazebo --version
+ros2 pkg list | grep -E "moveit|gazebo_ros|diagnostic"
+```
+
+**Expect:** `ros2 doctor` reports no critical errors, `gazebo --version`
+prints `11.x`, and the `ros2 pkg list` grep shows the moveit/gazebo_ros/
+diagnostic packages just installed.
+
+---
+
+## 1. Get the code, resolve dependencies, and build
+
+```bash
+# ── Clone (grabs the vendored Yaskawa submodule too) ──────────────────────
 git clone --recurse-submodules https://github.com/ombhagwat18/high_fidelity_digital_twin_yakasawa_motoman_gp12.git
 cd high_fidelity_digital_twin_yakasawa_motoman_gp12
 
+# If you cloned without --recurse-submodules, fetch the submodule now:
+git submodule update --init --recursive
+
+# ── Resolve any remaining ROS package dependencies automatically ─────────
+# (catches anything §0's manual apt list missed)
+rosdep install --from-paths src --ignore-src -r -y
+
+# ── Build the whole workspace ─────────────────────────────────────────────
 colcon build --symlink-install
+
+# ── Source the workspace overlay (every new terminal needs this too — or
+#    add it to ~/.bashrc AFTER the /opt/ros/humble line above) ─────────────
 source install/setup.bash
 ```
 
@@ -29,18 +111,21 @@ plugins (`warehouse_gripper_control`, `warehouse_gazebo`'s
 `conveyor_belt_plugin`) and the marker-texture generation step (a message
 like `[generate_parcel_marker_assets] generated 6 marker textures...` should
 print during `warehouse_gazebo`'s configure step — if it instead prints a
-warning about OpenCV not being available, install `python3-opencv`/
-`opencv-contrib-python` and rebuild `warehouse_gazebo`, or the spawned
-parcels will be plain grey boxes with no detectable marker).
+warning about OpenCV not being available, re-run the `pip install
+opencv-contrib-python` line from §0 and rebuild `warehouse_gazebo`, or the
+spawned parcels will be plain grey boxes with no detectable marker).
 
 ```bash
 # Rebuild just one package while iterating (much faster)
 colcon build --packages-select warehouse_pick_place --symlink-install
+
+# Confirm every warehouse_* package actually installed
+ros2 pkg list | grep warehouse
 ```
 
 ---
 
-## 1. Bring the whole system up
+## 2. Bring the whole system up
 
 ```bash
 ros2 launch warehouse_bringup bringup.launch.py
@@ -71,7 +156,7 @@ regress.
 
 ---
 
-## 2. Foundation: Gazebo + controllers + MoveIt
+## 3. Foundation: Gazebo + controllers + MoveIt
 
 ```bash
 # Controllers actually loaded and active
@@ -94,7 +179,7 @@ through the arm to `tool0`/`suction_cup_link` and to both cameras.
 
 ---
 
-## 3. Cameras & ArUco perception
+## 4. Cameras & ArUco perception
 
 ```bash
 # Confirm the actual topic names Gazebo publishes (flagged as unverified
@@ -130,7 +215,7 @@ version actually publishes — fix those two constants to match
 
 ---
 
-## 4. Conveyor + mixed-shape parcel spawner
+## 5. Conveyor + mixed-shape parcel spawner
 
 ```bash
 # Belt is actually moving (not just visually — check the joint velocity)
@@ -150,12 +235,12 @@ shows a non-zero `velocity` on `belt_joint`.
 
 **If this fails:** check `src/warehouse_gazebo/src/conveyor_belt_plugin.cpp`
 (is it registered in `conveyor_belt/model.sdf`?) and confirm
-`scripts/generate_parcel_marker_assets.py` actually ran during build (§0) —
+`scripts/generate_parcel_marker_assets.py` actually ran during build (§1) —
 without marker textures, parcels spawn as plain grey boxes.
 
 ---
 
-## 5. Vacuum gripper (real physics attach/detach)
+## 6. Vacuum gripper (real physics attach/detach)
 
 ```bash
 # Manually test attach/detach with the suction cup touching a parcel in Gazebo
@@ -180,7 +265,7 @@ error in the Gazebo terminal output (look for
 
 ---
 
-## 6. Full pick-and-place cycle
+## 7. Full pick-and-place cycle
 
 ```bash
 # Watch the state machine's own logs (this is where cycle steps print)
@@ -205,7 +290,7 @@ function's docstring for how to tune `WRIST_YAW_SIGN`.
 
 ---
 
-## 7. Simulated YRC1000 controller & safety behaviour
+## 8. Simulated YRC1000 controller & safety behaviour
 
 ```bash
 # Controller status
@@ -242,7 +327,7 @@ Revert the YAML edit afterward.
 
 ---
 
-## 8. Diagnostics / health monitoring
+## 9. Diagnostics / health monitoring
 
 ```bash
 # Raw feed
@@ -254,7 +339,7 @@ ros2 run rqt_robot_monitor rqt_robot_monitor
 
 **Expect:** `rqt_robot_monitor` shows four rows — Controller, Perception,
 PickPlace, Gripper — all green under normal operation. Engaging E-stop
-(§7) turns Controller red immediately; letting perception go >30s with no
+(§8) turns Controller red immediately; letting perception go >30s with no
 detections turns Perception yellow; hitting the protective-stop threshold
 turns PickPlace red.
 
@@ -266,7 +351,7 @@ around `diagnostic_updater` on node startup.
 
 ---
 
-## 9. Configuration overrides
+## 10. Configuration overrides
 
 ```bash
 # Confirm a node actually picked up its YAML config
@@ -288,7 +373,7 @@ Config files, if you want to tune something permanently:
 
 ---
 
-## 10. Per-package build/lint tests
+## 11. Per-package build/lint tests
 
 ```bash
 # Every package has a BUILD_TESTING/lint block now
@@ -303,7 +388,7 @@ the code is lint-clean).
 
 ---
 
-## 11. Quick reference: everything in one block
+## 12. Quick reference: everything in one block
 
 For a fast smoke test after any change, run these in order:
 

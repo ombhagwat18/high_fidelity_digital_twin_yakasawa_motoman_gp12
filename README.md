@@ -173,6 +173,9 @@ flowchart TB
 ## 🚀 Quickstart
 
 > Requires **Ubuntu 22.04 + ROS2 Humble + Gazebo11** (native or WSL2 — not plain Windows).
+> Starting from a bare machine with none of that installed? See
+> [`docs/VERIFICATION.md` §0](docs/VERIFICATION.md#0-prerequisites--install-ros2-humble-gazebo11-moveit2-from-scratch)
+> for the full apt install list.
 
 ```bash
 # Clone with the vendored Yaskawa submodule
@@ -260,10 +263,11 @@ colcon test-result --verbose
 
 ## ✅ Verification Runbook
 
-Every command to check every feature actually works — build, launch, cameras,
-perception, conveyor, gripper, full pick cycles, controller/safety behaviour,
-diagnostics, and config overrides — with expected output and "if this fails,
-check X" notes for each one:
+Every command from a bare Ubuntu machine to a fully working cell — installing
+ROS2 Humble/Gazebo11/MoveIt2, cloning + building + sourcing this repo, then
+checking every feature (launch, cameras, perception, conveyor, gripper, full
+pick cycles, controller/safety behaviour, diagnostics, config overrides) —
+with expected output and "if this fails, check X" notes for each one:
 
 **➡️ [`docs/VERIFICATION.md`](docs/VERIFICATION.md)**
 
