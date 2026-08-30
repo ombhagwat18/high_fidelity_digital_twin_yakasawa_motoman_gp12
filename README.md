@@ -49,6 +49,7 @@
 - [🛡️ Safety & Observability](#️-safety--observability)
 - [🔁 Real-Hardware Roadmap](#-real-hardware-roadmap)
 - [🧪 Testing](#-testing)
+- [✅ Verification Runbook](#-verification-runbook)
 - [🗺️ What I Learned Building This](#️-what-i-learned-building-this)
 - [📄 License](#-license)
 
@@ -254,6 +255,17 @@ Every package is fully scaffolded for `colcon test` (lint + copyright + style):
 colcon test --packages-select warehouse_pick_place
 colcon test-result --verbose
 ```
+
+<br/>
+
+## ✅ Verification Runbook
+
+Every command to check every feature actually works — build, launch, cameras,
+perception, conveyor, gripper, full pick cycles, controller/safety behaviour,
+diagnostics, and config overrides — with expected output and "if this fails,
+check X" notes for each one:
+
+**➡️ [`docs/VERIFICATION.md`](docs/VERIFICATION.md)**
 
 <br/>
 

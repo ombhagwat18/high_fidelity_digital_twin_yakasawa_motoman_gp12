@@ -46,9 +46,11 @@ There are no application-level unit tests beyond the ament boilerplate
 (`test_copyright.py`, `test_flake8.py`, `test_pep257.py` in each Python
 package) — testing this system means launching it in Gazebo and observing
 behavior (RViz, `ros2 topic echo`, terminal logs), not running a test suite.
-See `docs/architecture/README.md`'s verification checklist for the specific
-things to check after a build, none of which have been runtime-verified in
-this repo's own dev environment (no WSL distro installed there — see
+See `docs/VERIFICATION.md` for the full command-by-command runbook (every
+feature, with expected output and what to check if it doesn't match) and
+`docs/architecture/README.md`'s verification checklist for the condensed
+version — none of it has been runtime-verified in this repo's own dev
+environment (no WSL distro installed there — see
 `docs/architecture/README.md` for that caveat).
 
 ## Package map (`src/`)
