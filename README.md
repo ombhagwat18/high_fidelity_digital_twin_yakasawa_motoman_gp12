@@ -21,10 +21,6 @@
 
 <br/>
 
-<img src="docs/media/robot_arm.svg" alt="GP12 arm reaching for an ArUco-tagged parcel on the conveyor (original illustration)" width="640"/>
-
-<br/><br/>
-
 <img src="docs/media/gp12_yaskawa_spec.jpg" alt="Official Yaskawa Motoman GP12 dimension and reach-envelope diagram" width="640"/>
 
 <sub>The real robot this digital twin models — official Yaskawa Motoman GP12 dimension/reach-envelope diagram. © Yaskawa Motoman, from their MODEX 2024 spec sheet, used here for reference only.</sub>
@@ -218,8 +214,7 @@ ros2 service call /yrc1000/estop std_srvs/srv/SetBool "{data: true}"
 
 ## 🎬 Demo
 
-The banner illustration above is an original hand-drawn SVG (`docs/media/robot_arm.svg`), not a
-screenshot — this project is simulation-only right now, and no Gazebo/RViz recordings exist yet.
+This project is simulation-only right now, and no Gazebo/RViz recordings exist yet.
 
 > 🎥 **Real screenshots/GIFs coming soon.** Drop your own Gazebo/RViz recordings into `docs/media/`
 > and reference them here (e.g. `docs/media/pick_cycle.gif`, `docs/media/operator_dashboard.png`)
